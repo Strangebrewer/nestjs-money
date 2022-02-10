@@ -31,4 +31,13 @@ export class AccountsService {
   remove(_id: string) {
     return this.accountModel.deleteOne({ _id });
   }
+
+  deleteAll() {
+    console.log('running AccountsService.deleteAll()');
+    return this.accountModel.deleteMany({});
+  }
+
+  getCount() {
+    return this.accountModel.count();
+  }
 }

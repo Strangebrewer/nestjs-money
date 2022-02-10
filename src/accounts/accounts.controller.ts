@@ -1,7 +1,14 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Request, UseGuards } from '@nestjs/common';
-import { Request as Req } from 'express';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  UseGuards
+} from '@nestjs/common';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { AddUserIdPipe } from 'src/common/pipes/add-user-id.pipe';
 import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
@@ -22,11 +29,14 @@ export class AccountsController {
     return this.accountsService.findOne(id);
   }
 
+  @Delete('all')
+  deleteAll() {
+    return this.accountsService.deleteAll();
+  }
+
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Body(AddUserIdPipe) createAccountDto: CreateAccountDto, @Request() req: any) {
-    console.log('req.user:::', req.user);
-    createAccountDto.user = req.user.id;
+  create(@Body() createAccountDto: CreateAccountDto) {
     return this.accountsService.create(createAccountDto);
   }
 

@@ -1,11 +1,25 @@
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
-import { AddUserIdMiddleware } from './middleware/add-user-id.middleware';
+import { MongooseModule } from '@nestjs/mongoose';
+import { User, UserSchema } from 'src/users/entities/user.entity';
+import { UsersModule } from 'src/users/users.module';
+import { SomeKindOfMiddleware } from './middleware/some-kind-of.middleware';
 
-@Module({})
+@Module({
+  imports: [
+    UsersModule,
+    MongooseModule.forFeature([
+      {
+        name: User.name,
+        schema: UserSchema
+      }
+    ])
+  ],
+})
 export class CommonModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(AddUserIdMiddleware).forRoutes(
-      { path: 'accounts', method: RequestMethod.POST }
+    // a middle ware for all POST routes, for example
+    consumer.apply(SomeKindOfMiddleware).forRoutes(
+      { path: "*", method: RequestMethod.POST },
     )
   }
 }

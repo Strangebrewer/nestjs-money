@@ -49,4 +49,12 @@ export class UsersService {
     const result = await this.userModel.deleteOne({ _id });
     return result;
   }
+
+  deleteAll() {
+    return this.userModel.deleteMany();
+  }
+
+  getCount() {
+    return this.userModel.count();
+  }
 }
