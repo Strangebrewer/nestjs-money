@@ -32,7 +32,10 @@ export class AuthController {
     @Request() req: Req
   ) {
     const user = await this.usersService.create(createUserDto);
-    if (user) req.user = user;
+    if (user) {
+      const { password, ...rest } = user;
+      req.user = rest;
+    }
     return this.authService.getToken(req.user);
   }
 }

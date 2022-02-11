@@ -8,12 +8,4 @@ export class AppService {
   getHello(): string {
     return 'Hello World!';
   }
-
-  deleteAll(type: string) {
-    console.log('type:::', type);
-    switch (type) {
-      case 'accounts':
-        return this.accountsService.deleteAll();
-    }
-  }
 }
