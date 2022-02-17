@@ -6,6 +6,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
 import { AccountsModule } from './accounts/accounts.module';
 import { CommonModule } from './common/common.module';
+import { TransactionsModule } from './transactions/transactions.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -14,6 +15,7 @@ import appConfig from './config/app.config';
     AccountsModule,
     UsersModule,
     CommonModule,
+    TransactionsModule,
     MongooseModule.forRoot('mongodb://localhost:27017/nest-money'),
   ],
   controllers: [AppController],

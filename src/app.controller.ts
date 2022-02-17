@@ -17,6 +17,19 @@ export class AppController {
   }
 
   // for convenience while developing:
+  @Get('all/:type')
+  async getAll(@Param('type') type: string) {
+    switch (type) {
+      case 'accounts':
+        return this.accountsService.findAll();
+      case 'users':
+        return this.usersService.findAll();
+      default:
+        return [];
+    }
+  }
+
+  // for convenience while developing:
   @Delete('all/:type')
   async deleteAll(@Param('type') type: string) {
     console.log('type:::', type);
