@@ -4,6 +4,7 @@ import { User, UserSchema } from 'src/users/entities/user.entity';
 import { UsersModule } from 'src/users/users.module';
 import { SomeKindOfMiddleware } from './middleware/some-kind-of.middleware';
 
+
 @Module({
   imports: [
     UsersModule,
@@ -17,7 +18,7 @@ import { SomeKindOfMiddleware } from './middleware/some-kind-of.middleware';
 })
 export class CommonModule {
   configure(consumer: MiddlewareConsumer) {
-    // a middle ware for all POST routes, for example
+    // a middle ware for all POST routes, for example - keeping only as an example
     consumer.apply(SomeKindOfMiddleware).forRoutes(
       { path: "*", method: RequestMethod.POST },
     )

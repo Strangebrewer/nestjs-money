@@ -21,9 +21,7 @@ export class AuthService {
 
   getToken(user: any) {
     const payload = { username: user.username, sub: user._id };
-    return {
-      access_token: this.jwtService.sign(payload)
-    }
+    return { token: this.jwtService.sign(payload) };
   }
 
   checkPassword(given: string, original: string): boolean {

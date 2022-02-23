@@ -8,7 +8,9 @@ import {
   Post,
   UseGuards
 } from '@nestjs/common';
+import { User } from 'src/common/decorators/user.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
+import { User as UserEntity } from 'src/users/entities/user.entity';
 import { AccountsService } from './accounts.service';
 import { CreateAccountDto } from './dto/create-account.dto';
 import { UpdateAccountDto } from './dto/update-account.dto';
@@ -19,8 +21,8 @@ export class AccountsController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  findAll() {
-    return this.accountsService.findAll();
+  findAll(@User() user: UserEntity) {
+    return this.accountsService.findAll(user.id);
   }
 
   @UseGuards(JwtAuthGuard)

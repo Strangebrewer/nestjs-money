@@ -5,15 +5,16 @@ import {
   Get,
   Param,
   Patch,
-  Request,
   UseGuards
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
-import { UsersService } from './users.service';
+import { ITokenized, UsersService } from './users.service';
 import { Request as Req } from 'express';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ValidateUserDataPipe } from './pipes/validate-user-data.pipe';
 import { TransformUserDataPipe } from './pipes/transform-user-data.pipe';
+import { User } from 'src/common/decorators/user.decorator';
+import { User as UserEntity } from './entities/user.entity';
 
 
 @Controller('users')
@@ -22,8 +23,8 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  getCurrentUser(@Request() req: Req) {
-    return this.usersService.getCurrentUser(req.user);
+  getCurrentUser(@User() user: UserEntity): Promise<ITokenized> {
+    return this.usersService.getCurrentUser(user.id);
   }
 
   @Get('all')

@@ -7,6 +7,11 @@ import { AuthService } from 'src/auth/auth.service';
 import slugify from 'slugify';
 import { UpdateUserDto } from './dto/update-user.dto';
 
+export interface ITokenized {
+  user: Partial<User>,
+  token: string
+}
+
 @Injectable()
 export class UsersService {
   constructor(
@@ -18,8 +23,11 @@ export class UsersService {
     return this.userModel.find();
   }
 
-  async getCurrentUser(user: Partial<User>): Promise<User | undefined> {
-    return this.userModel.findById(user.id);
+  async getCurrentUser(userId: string): Promise<ITokenized | undefined> {
+    const user = await this.userModel.findById(userId);
+    if (user) {
+      return this.tokenize(user);
+    }
   }
 
   async findOne(id: string): Promise<User | undefined> {
@@ -36,9 +44,10 @@ export class UsersService {
     return this.userModel.findOne({ normalizedUsername: sluggedUsername }).lean();
   }
 
-  async create(createUserDto: CreateUserDto): Promise<User | undefined> {
+  async create(createUserDto: CreateUserDto): Promise<ITokenized> {
     let user = new this.userModel(createUserDto);
-    return user.save();
+    user = await user.save();
+    return this.tokenize(user);
   }
 
   async update(updateUserDto: UpdateUserDto, id: string): Promise<User | undefined> {
@@ -56,5 +65,11 @@ export class UsersService {
 
   getCount() {
     return this.userModel.count();
+  }
+
+  private tokenize(user: User): ITokenized {
+    const { password, ...rest } = user.toObject();
+    const { token } = this.authService.getToken(user);
+    return { user: rest, token };
   }
 }

@@ -23,7 +23,8 @@ export class AuthController {
   @UseGuards(AuthGuard('local'))
   @Post('login')
   async login(@Request() req: Req) {
-    return this.authService.getToken(req.user);
+    const { token } = this.authService.getToken(req.user);
+    return { user: req.user, token };
   }
 
   @Post('register')
@@ -31,11 +32,6 @@ export class AuthController {
     @Body(ValidateUserDataPipe, TransformUserDataPipe) createUserDto: CreateUserDto,
     @Request() req: Req
   ) {
-    const user = await this.usersService.create(createUserDto);
-    if (user) {
-      const { password, ...rest } = user;
-      req.user = rest;
-    }
-    return this.authService.getToken(req.user);
+    return await this.usersService.create(createUserDto);
   }
 }

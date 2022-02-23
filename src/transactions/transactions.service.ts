@@ -20,8 +20,8 @@ export class TransactionsService {
     @Inject(AccountsService) private readonly accountsService: AccountsService
   ) { }
 
-  findAll(req: any) {
-    return this.transactionModel.find({ user: req.user.id });
+  findAll(userId: string) {
+    return this.transactionModel.find({ user: userId });
   }
 
   findOne(id: string) {

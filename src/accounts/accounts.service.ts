@@ -13,8 +13,8 @@ export class AccountsService {
     @InjectModel(Account.name) private readonly accountModel: Model<Account>
   ) { }
 
-  findAll() {
-    return this.accountModel.find();
+  findAll(userId: string) {
+    return this.accountModel.find({ user: userId });
   }
 
   findOne(id: string) {
