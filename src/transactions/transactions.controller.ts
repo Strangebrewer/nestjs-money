@@ -1,4 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { BillsService } from 'src/bills/bills.service';
 import { User } from 'src/common/decorators/user.decorator';
 import { JwtAuthGuard } from 'src/common/guards/jwt-auth.guard';
 import { User as UserEntity } from 'src/users/entities/user.entity';
@@ -8,7 +9,10 @@ import { TransactionsService } from './transactions.service';
 
 @Controller('transactions')
 export class TransactionsController {
-  constructor(private readonly transactionsService: TransactionsService) { }
+  constructor(
+    private readonly transactionsService: TransactionsService,
+    private readonly billsService: BillsService
+  ) { }
 
   @UseGuards(JwtAuthGuard)
   @Get()
@@ -34,6 +38,16 @@ export class TransactionsController {
     //  look up the template, call this.transactionsService.mergeTemplateIntoTransaction
     //  then send it to the create method
     return this.transactionsService.create(createTransactionDto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('pay-bill/:billId')
+  async createFromBill(
+    @Param('billId') billId: string,
+    @Body() createTransactionDto: Partial<CreateTransactionDto>
+  ) {
+    const bill = await this.billsService.findOne(billId).lean();
+    return this.transactionsService.createFromBill(bill, createTransactionDto);
   }
 
 

@@ -1,8 +1,10 @@
 import { Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { LeanDocument, Model } from 'mongoose';
 import { AccountsService } from 'src/accounts/accounts.service';
 import { Account } from 'src/accounts/entities/account.entity';
+import { BillsService } from 'src/bills/bills.service';
+import { Bill } from 'src/bills/entities/bill.entity';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { Transaction } from './entities/transaction.entity';
@@ -118,5 +120,13 @@ export class TransactionsService {
       if (source) await this.accountsService.adjustSourceBalance(txObject, true);
       throw new InternalServerErrorException('Something wetn wrong - please try again');
     }
+  }
+
+  async createFromBill(
+    bill: LeanDocument<Bill>,
+    createTransactionDto: Partial<CreateTransactionDto>
+  ) {
+    // If any fields exist in createTransactionDto, use those
+    //  otherwise, use the bill
   }
 }
