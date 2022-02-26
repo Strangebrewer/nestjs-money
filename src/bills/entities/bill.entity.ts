@@ -1,20 +1,21 @@
-import { Prop, SchemaFactory } from "@nestjs/mongoose";
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Schema as Skeema } from "mongoose";
 import { Account } from "src/accounts/entities/account.entity";
 import { User } from "src/users/entities/user.entity";
 
+@Schema({ timestamps: true })
 export class Bill extends Document {
   @Prop({ required: true })
   amount: number;
 
-  // @Prop({ type: Skeema.Types.ObjectId, ref: Category.name })
-  // category: Skeema.Types.ObjectId;
+  // @Prop({ ref: Category.name })
+  // category: string;
 
   @Prop()
   description: string;
 
-  @Prop({ ref: Account.name, type: Skeema.Types.ObjectId })
-  destination: Skeema.Types.ObjectId | Account;
+  @Prop({ ref: Account.name })
+  destination: string;
 
   @Prop()
   dueDay: string;
@@ -28,14 +29,14 @@ export class Bill extends Document {
   @Prop({ enum: ['yearly', 'monthly'], default: 'monthly' })
   period: string;
   
-  @Prop({ ref: Account.name, type: Skeema.Types.ObjectId })
-  source: Skeema.Types.ObjectId | Account;
+  @Prop({ ref: Account.name })
+  source: string;
 
   @Prop({ required: true, enum: ['active', 'inactive'], default: 'active' })
   status: string;
   
   @Prop({ required: true, ref: User.name })
-  user: Skeema.Types.ObjectId;
+  user: string;
 }
 
 export const BillSchema = SchemaFactory.createForClass(Bill);

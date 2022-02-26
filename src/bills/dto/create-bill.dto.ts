@@ -4,20 +4,17 @@ export class CreateBillDto {
   @IsNumber()
   amount: number;
 
-  // @IsString()
-  // category: Skeema.Types.ObjectId;
-
   @IsString()
   description: string;
 
   @IsString()
-  destination: string;
+  destination?: string;
 
   @IsString()
   dueDay: string;
 
   @IsString()
-  dueMonth: string;
+  dueMonth?: string;
 
   @IsString()
   name: string;

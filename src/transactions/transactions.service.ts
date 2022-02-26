@@ -1,10 +1,12 @@
 import { Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { Request } from 'express';
 import { LeanDocument, Model } from 'mongoose';
 import { AccountsService } from 'src/accounts/accounts.service';
 import { Account } from 'src/accounts/entities/account.entity';
 import { BillsService } from 'src/bills/bills.service';
 import { Bill } from 'src/bills/entities/bill.entity';
+import { User } from 'src/users/entities/user.entity';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { Transaction } from './entities/transaction.entity';
@@ -64,10 +66,12 @@ export class TransactionsService {
     if (!found) throw new NotFoundException('Transaction not found');
 
     if (found.source) {
-      found.source = await this.accountsService.adjustSourceBalance(found, true);
+      const foundSource = await this.accountsService.adjustSourceBalance(found, true);
+      found.source = foundSource._id;
     }
     if (found.destination) {
-      found.destination = await this.accountsService.adjustDestinationBalance(found, true);
+      const foundDestination = await this.accountsService.adjustDestinationBalance(found, true);
+      found.destination = foundDestination._id;
     }
 
     try {
@@ -124,9 +128,63 @@ export class TransactionsService {
 
   async createFromBill(
     bill: LeanDocument<Bill>,
+    req: Request,
+    user: User,
     createTransactionDto: Partial<CreateTransactionDto>
   ) {
     // If any fields exist in createTransactionDto, use those
     //  otherwise, use the bill
+    let originalBalance: number;
+    let newBalance: number;
+    let transaction: Transaction;
+    let sourceId = bill.source.toString();
+    let transactionSource = createTransactionDto.source ? createTransactionDto.source : bill.source;
+    const amount = createTransactionDto.amount ? createTransactionDto.amount : bill.amount;
+
+    try {
+      const source = await this.accountsService.findOne(sourceId);
+      originalBalance = source.balance;
+      const accountType = source.accountType;
+      if (accountType === 'asset') {
+        source.balance = originalBalance - amount;
+      } else {
+        source.balance = originalBalance + amount;
+      }
+      const saved = await source.save();
+      newBalance = saved.balance;
+    } catch (err) {
+      if (newBalance !== originalBalance) {
+        await this.accountsService.update(sourceId, { balance: originalBalance });
+      }
+      console.log('err in transaction.service createFromBill account update:::', err);
+      throw new InternalServerErrorException('Something went wrong - please try again');
+    }
+
+    try {
+      const description = req.query.edited ? 'edited default payment' : 'default payment';
+      const { year, month } = req.query;
+      const transactionData: Partial<Transaction> = {
+        amount,
+        bill: bill.id,
+        date: new Date(Number(year), Number(month), parseInt(bill.dueDay)),
+        description,
+        source: transactionSource.toString(),
+        transactionType: 'expense',
+        user: user.id
+      };
+
+      // uncomment when category module is created
+      // if (createTransactionDto.category) {
+      //   transactionData.category = createTransactionDto.category;
+      // }
+
+      transaction = await this.transactionModel.create(transactionData);
+      return transaction;
+    } catch (err) {
+      console.log('err in transaction.service createFromBill transaction create:::', err);
+      if (!transaction || !transaction._id || transaction.bill !== bill.id) {
+        await this.accountsService.update(createTransactionDto.source, { balance: originalBalance });
+      }
+    }
   }
 }
