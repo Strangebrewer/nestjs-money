@@ -1,6 +1,6 @@
 import { IsNumber, IsString } from "class-validator";
 
-export class CreateBillDto {
+export class CreateTemplateDto {
   @IsNumber()
   amount: number;
 
@@ -14,23 +14,14 @@ export class CreateBillDto {
   destination?: string;
 
   @IsString()
-  dueDay: string;
-
-  @IsString()
-  dueMonth?: string;
-
-  @IsString()
   name: string;
 
   @IsString()
-  period: string;
-  
-  @IsString()
-  source: string;
+  source?: string;
 
   @IsString()
-  status: string;
-  
+  transactionType: string;
+
   @IsString()
   user: string;
 }

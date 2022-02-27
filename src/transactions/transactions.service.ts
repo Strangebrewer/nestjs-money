@@ -1,28 +1,31 @@
 import { Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Request } from 'express';
-import { LeanDocument, Model } from 'mongoose';
+import { LeanDocument, Model, PopulatedDoc } from 'mongoose';
+import * as mongoose from 'mongoose';
 import { AccountsService } from 'src/accounts/accounts.service';
-import { Account } from 'src/accounts/entities/account.entity';
-import { BillsService } from 'src/bills/bills.service';
 import { Bill } from 'src/bills/entities/bill.entity';
+import { CreateTransactionReturn } from 'src/common/types';
 import { User } from 'src/users/entities/user.entity';
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { Transaction } from './entities/transaction.entity';
-
-type CreateTransactionReturn = {
-  destination?: Account;
-  source?: Account;
-  transaction?: Transaction;
-}
+import { Account } from 'src/accounts/entities/account.entity';
+import { BillTransactionQueryDto } from './dto/bill-transaction-query.dto';
 
 @Injectable()
 export class TransactionsService {
   constructor(
     @InjectModel(Transaction.name) private readonly transactionModel: Model<Transaction>,
-    @Inject(AccountsService) private readonly accountsService: AccountsService
+    @Inject(AccountsService) private readonly accountsService: AccountsService,
+    @InjectConnection() private readonly connection: mongoose.Connection
   ) { }
+
+  // This is only for development convenience - remove later
+  deleteAll() {
+    console.log('running TransactionsService.deleteAll()');
+    return this.transactionModel.deleteMany({});
+  }
 
   findAll(userId: string) {
     return this.transactionModel.find({ user: userId });
@@ -127,64 +130,45 @@ export class TransactionsService {
   }
 
   async createFromBill(
-    bill: LeanDocument<Bill>,
-    req: Request,
-    user: User,
-    createTransactionDto: Partial<CreateTransactionDto>
+    bill: PopulatedDoc<Account & Bill>,
+    query: BillTransactionQueryDto
   ) {
-    // If any fields exist in createTransactionDto, use those
-    //  otherwise, use the bill
-    let originalBalance: number;
-    let newBalance: number;
-    let transaction: Transaction;
-    let sourceId = bill.source.toString();
-    let transactionSource = createTransactionDto.source ? createTransactionDto.source : bill.source;
-    const amount = createTransactionDto.amount ? createTransactionDto.amount : bill.amount;
+    const session = await this.connection.startSession();
+    session.startTransaction();
 
     try {
-      const source = await this.accountsService.findOne(sourceId);
-      originalBalance = source.balance;
-      const accountType = source.accountType;
-      if (accountType === 'asset') {
-        source.balance = originalBalance - amount;
-      } else {
-        source.balance = originalBalance + amount;
-      }
-      const saved = await source.save();
-      newBalance = saved.balance;
-    } catch (err) {
-      if (newBalance !== originalBalance) {
-        await this.accountsService.update(sourceId, { balance: originalBalance });
-      }
-      console.log('err in transaction.service createFromBill account update:::', err);
-      throw new InternalServerErrorException('Something went wrong - please try again');
-    }
+      const description = query.edited ? 'edited default payment' : 'default payment';
+      const { year, month } = query;
+      // const source = bill.source;
+      // const originalBalance = source.balance;
 
-    try {
-      const description = req.query.edited ? 'edited default payment' : 'default payment';
-      const { year, month } = req.query;
+      await this.accountsService.adjustSourceBalance(bill);
+
+      // if (source.accountType === 'asset') {
+      //   source.balance = originalBalance - bill.amount;
+      // } else {
+      //   source.balance = originalBalance + bill.amount;
+      // }
+      // await this.accountsService.update(source._id, source);
+
       const transactionData: Partial<Transaction> = {
-        amount,
+        amount: bill.amount,
         bill: bill.id,
         date: new Date(Number(year), Number(month), parseInt(bill.dueDay)),
         description,
-        source: transactionSource.toString(),
+        source: bill.source,
         transactionType: 'expense',
-        user: user.id
+        user: bill.user
       };
+      if (bill.category) transactionData.category = bill.category;
 
-      // uncomment when category module is created
-      // if (createTransactionDto.category) {
-      //   transactionData.category = createTransactionDto.category;
-      // }
-
-      transaction = await this.transactionModel.create(transactionData);
-      return transaction;
+      return await this.transactionModel.create(transactionData);
     } catch (err) {
-      console.log('err in transaction.service createFromBill transaction create:::', err);
-      if (!transaction || !transaction._id || transaction.bill !== bill.id) {
-        await this.accountsService.update(createTransactionDto.source, { balance: originalBalance });
-      }
+      console.log('err in createFromBill:::', err);
+      await session.abortTransaction();
+      throw new InternalServerErrorException('Something went wrong - please try again');
+    } finally {
+      session.endSession();
     }
   }
 }

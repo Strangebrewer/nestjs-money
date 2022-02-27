@@ -13,6 +13,12 @@ export class AccountsService {
     @InjectModel(Account.name) private readonly accountModel: Model<Account>
   ) { }
 
+  // This is only for development convenience - remove later
+  deleteAll() {
+    console.log('running AccountsService.deleteAll()');
+    return this.accountModel.deleteMany({});
+  }
+
   findAll(userId: string) {
     return this.accountModel.find({ user: userId });
   }
@@ -33,12 +39,8 @@ export class AccountsService {
     return this.accountModel.deleteOne({ _id });
   }
 
-  deleteAll() {
-    console.log('running AccountsService.deleteAll()');
-    return this.accountModel.deleteMany({});
-  }
-
   getCount() {
+    throw new Error('Suck it, honkey')
     return this.accountModel.count();
   }
 

@@ -11,6 +11,12 @@ export class BillsService {
     @InjectModel(Bill.name) private readonly billModel: Model<Bill>
   ) {}
 
+  // This is only for development convenience - remove later
+  deleteAll() {
+    console.log('running BillsService.deleteAll()');
+    return this.billModel.deleteMany({});
+  }
+
   findAll(userId: string) {
     return this.billModel.find({ user: userId });
   }

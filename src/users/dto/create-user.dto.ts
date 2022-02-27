@@ -2,7 +2,7 @@ import { IsString } from "class-validator";
 
 export class CreateUserDto {  
   @IsString()
-  username: string;
+  readonly username: string;
 
   @IsString()
   normalizedUsername: string;

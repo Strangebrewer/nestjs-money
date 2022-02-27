@@ -8,6 +8,8 @@ import { AccountsModule } from './accounts/accounts.module';
 import { CommonModule } from './common/common.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { BillsModule } from './bills/bills.module';
+import { CategoriesModule } from './categories/categories.module';
+import { TemplatesModule } from './templates/templates.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -15,7 +17,9 @@ import appConfig from './config/app.config';
     ConfigModule.forRoot({ isGlobal: true, load: [appConfig] }),
     AccountsModule,
     BillsModule,
+    CategoriesModule,
     CommonModule,
+    TemplatesModule,
     TransactionsModule,
     UsersModule,
     MongooseModule.forRoot('mongodb://localhost:27017/nest-money'),

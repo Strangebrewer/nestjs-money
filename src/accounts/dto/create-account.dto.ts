@@ -8,6 +8,9 @@ export class CreateAccountDto {
   balance: number;
 
   @IsString()
+  description?: string;
+
+  @IsString()
   name: string;
 
   @IsString()

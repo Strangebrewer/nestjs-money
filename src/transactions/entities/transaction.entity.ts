@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Schema as Skeema } from "mongoose";
 import { Bill } from "src/bills/entities/bill.entity";
+import { Category } from "src/categories/entities/category.entity";
 import { User } from "src/users/entities/user.entity";
 import { Account } from "../../accounts/entities/account.entity";
 
@@ -12,8 +13,8 @@ export class Transaction extends Document {
   @Prop({ ref: Bill.name })
   bill: string;;
   
-  // @Prop({ ref: Category.name })
-  // category: string;
+  @Prop({ ref: Category.name })
+  category: string;
 
   @Prop({ required: true, default: new Date() })
   date: Date;
